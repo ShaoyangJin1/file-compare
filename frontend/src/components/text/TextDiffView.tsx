@@ -1,18 +1,12 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useMemo } from 'react';
 import { Segmented, Card, Typography } from 'antd';
-import {
-  Diff2HtmlUI,
-  type Diff2HtmlUIConfig,
-} from 'diff2html/lib/ui/js/diff2html-ui-base';
+import { html } from 'diff2html';
 import 'diff2html/bundles/css/diff2html.min.css';
 import type { TextCompareResult } from '../../types';
 
 const { Text } = Typography;
 
-const OUTPUT_FORMATS: Record<string, 'side-by-side' | 'line-by-line'> = {
-  'Side-by-Side': 'side-by-side',
-  'Line-by-Line': 'line-by-line',
-};
+type ViewMode = 'side-by-side' | 'line-by-line';
 
 interface TextDiffViewProps {
   result: TextCompareResult;
@@ -20,39 +14,30 @@ interface TextDiffViewProps {
 
 export default function TextDiffView({ result }: TextDiffViewProps) {
   const containerRef = useRef<HTMLDivElement>(null);
-  const [viewMode, setViewMode] =
-    useState<keyof typeof OUTPUT_FORMATS>('Side-by-Side');
+  const [viewMode, setViewMode] = useState<ViewMode>('side-by-side');
+
+  const diffHtml = useMemo(() => {
+    if (!result.unified_diff) return '';
+    return html(result.unified_diff, {
+      outputFormat: viewMode,
+      drawFileList: false,
+      matching: 'lines',
+    });
+  }, [result.unified_diff, viewMode]);
 
   useEffect(() => {
-    if (!containerRef.current || !result.unified_diff) return;
-
-    // Clear previous content
-    containerRef.current.innerHTML = '';
-
-    const diff2htmlUi = new Diff2HtmlUI(
-      containerRef.current,
-      result.unified_diff,
-      {
-        outputFormat: OUTPUT_FORMATS[viewMode],
-        drawFileList: false,
-        matching: 'lines',
-        highlight: true,
-        fileListToggle: false,
-      } as Diff2HtmlUIConfig,
-    );
-    diff2htmlUi.draw();
-  }, [result.unified_diff, viewMode]);
+    if (!containerRef.current || !diffHtml) return;
+    containerRef.current.innerHTML = diffHtml;
+  }, [diffHtml]);
 
   return (
     <Card
       title="对比结果"
       extra={
         <Segmented
-          options={['Side-by-Side', 'Line-by-Line']}
+          options={['side-by-side', 'line-by-line']}
           value={viewMode}
-          onChange={(val) =>
-            setViewMode(val as keyof typeof OUTPUT_FORMATS)
-          }
+          onChange={(val) => setViewMode(val as ViewMode)}
         />
       }
       styles={{ body: { padding: 0 } }}
