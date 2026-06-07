@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npx create-vite@latest frontend --template react-ts)",
+      "Bash(pip install *)",
+      "Bash(python -m pip install -r \"c:/Users/Administrator/Desktop/file compare/backend/requirements.txt\")",
+      "Bash(python -c \"from main import app; print\\('Backend OK - FastAPI app created'\\)\")",
+      "Bash(taskkill //F //IM python.exe)"
+    ]
+  }
+}

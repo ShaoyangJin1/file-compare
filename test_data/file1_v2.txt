@@ -1,0 +1,40 @@
+# 项目配置文件 - 版本 2.0
+# 2026-06-07
+
+[DATABASE]
+host = db-prod.internal
+port = 5432
+database = myapp_v2
+username = admin
+password = new_secure_pwd_2026
+charset = utf8mb4
+
+[SERVER]
+host = 0.0.0.0
+port = 8080
+debug = false
+log_level = WARNING
+max_connections = 100
+
+[FEATURES]
+enable_cache = true
+cache_ttl = 7200
+max_upload_size = 52428800
+allowed_extensions = jpg,png,gif,mp4,pdf,docx,xlsx
+
+[USERS]
+admin = admin@newdomain.com
+support = support@newdomain.com
+max_login_attempts = 3
+session_timeout = 3600
+
+[SECURITY]
+enable_2fa = true
+jwt_secret = auto_generated_key_2026
+rate_limit = 100
+
+[EMAIL]
+smtp_host = smtp.newdomain.com
+smtp_port = 465
+use_tls = true
+from_address = app@newdomain.com

@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>{{ title }}</title>
+<style>
+  @page {
+    size: A4 landscape;
+    margin: 1.5cm;
+  }
+  body {
+    font-family: "Microsoft YaHei", "SimHei", "Noto Sans CJK SC", sans-serif;
+    font-size: 11pt;
+    color: #333;
+    line-height: 1.5;
+  }
+  h1 {
+    font-size: 18pt;
+    text-align: center;
+    margin-bottom: 5px;
+    color: #1a1a2e;
+  }
+  .meta {
+    text-align: center;
+    font-size: 9pt;
+    color: #888;
+    margin-bottom: 20px;
+  }
+  h2 {
+    font-size: 13pt;
+    border-bottom: 2px solid #4a90d9;
+    padding-bottom: 4px;
+    margin-top: 24px;
+    color: #1a1a2e;
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 10px 0 16px 0;
+    font-size: 9pt;
+    page-break-inside: avoid;
+  }
+  th {
+    background-color: #4a90d9;
+    color: white;
+    padding: 6px 8px;
+    text-align: left;
+    font-weight: 600;
+  }
+  td {
+    padding: 5px 8px;
+    border: 1px solid #ddd;
+    vertical-align: top;
+  }
+  tr:nth-child(even) {
+    background-color: #f7f9fc;
+  }
+  .summary-cards {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin: 12px 0;
+  }
+  .summary-card {
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    padding: 10px 14px;
+    min-width: 100px;
+    text-align: center;
+    background: #fafafa;
+  }
+  .summary-card .number {
+    font-size: 20pt;
+    font-weight: bold;
+    color: #4a90d9;
+  }
+  .summary-card .label {
+    font-size: 8pt;
+    color: #888;
+    margin-top: 2px;
+  }
+  .cell-old {
+    background-color: #ffeef0;
+    color: #cb2431;
+    text-decoration: line-through;
+    padding: 2px 4px;
+    border-radius: 2px;
+  }
+  .cell-new {
+    background-color: #e6ffed;
+    color: #22863a;
+    padding: 2px 4px;
+    border-radius: 2px;
+  }
+  .only-file1 { background-color: #fff5f5; }
+  .only-file2 { background-color: #f0fff4; }
+  .badge {
+    display: inline-block;
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-size: 8pt;
+    font-weight: 600;
+    margin-right: 4px;
+  }
+  .badge-added { background: #e6ffed; color: #22863a; }
+  .badge-removed { background: #ffeef0; color: #cb2431; }
+  .badge-changed { background: #fff5e6; color: #c67d08; }
+  .footer {
+    text-align: center;
+    font-size: 8pt;
+    color: #aaa;
+    margin-top: 20px;
+    border-top: 1px solid #eee;
+    padding-top: 8px;
+  }
+  pre {
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    font-size: 8pt;
+    background: #f6f8fa;
+    padding: 8px;
+    border-radius: 4px;
+    border: 1px solid #e1e4e8;
+    max-height: 300px;
+    overflow: hidden;
+  }
+</style>
+</head>
+<body>
+
+<h1>{{ title }}</h1>
+<p class="meta">生成时间: {{ generated_at }} | 对比类型: {% if compare_type == 'text' %}文本对比{% else %}Excel 对比{% endif %}</p>
+
+{% if compare_type == 'text' %}
+<!-- ====== TEXT COMPARISON REPORT ====== -->
+<h2>文件信息</h2>
+<table>
+  <tr><th>项目</th><th>文件 1</th><th>文件 2</th></tr>
+  <tr><td>文件名</td><td>{{ data.file1_name }}</td><td>{{ data.file2_name }}</td></tr>
+  <tr><td>编码</td><td colspan="2">{{ data.encoding }}</td></tr>
+  <tr><td>总行数</td><td>{{ data.file1_lines }}</td><td>{{ data.file2_lines }}</td></tr>
+</table>
+
+{% if data.stats %}
+<h2>差异统计</h2>
+<div class="summary-cards">
+  <div class="summary-card"><div class="number">{{ data.stats.added }}</div><div class="label">新增行</div></div>
+  <div class="summary-card"><div class="number">{{ data.stats.deleted }}</div><div class="label">删除行</div></div>
+  <div class="summary-card"><div class="number">{{ data.stats.changed }}</div><div class="label">修改行</div></div>
+  <div class="summary-card"><div class="number">{{ data.stats.unchanged }}</div><div class="label">未变更行</div></div>
+</div>
+{% endif %}
+
+{% if data.unified_diff %}
+<h2>差异详情 (Unified Diff)</h2>
+<pre>{{ data.unified_diff }}</pre>
+{% endif %}
+
+{% else %}
+<!-- ====== EXCEL COMPARISON REPORT ====== -->
+<h2>比对配置</h2>
+<table>
+  <tr><th>项目</th><th>值</th></tr>
+  <tr><td>Sheet</td><td>{{ data.sheet_name }}</td></tr>
+  <tr><td>Key 列</td><td>{{ data.key_columns | join(', ') }}</td></tr>
+  <tr><td>对比列</td><td>{{ data.compare_columns | join(', ') }}</td></tr>
+</table>
+
+{% if data.summary %}
+<h2>差异统计</h2>
+<div class="summary-cards">
+  <div class="summary-card"><div class="number">{{ data.summary.total_rows_file1 }}</div><div class="label">文件1总行数</div></div>
+  <div class="summary-card"><div class="number">{{ data.summary.total_rows_file2 }}</div><div class="label">文件2总行数</div></div>
+  <div class="summary-card"><div class="number">{{ data.summary.matched }}</div><div class="label">匹配行数</div></div>
+  <div class="summary-card"><div class="number">{{ data.summary.only_in_file1 }}</div><div class="label">仅在文件1</div></div>
+  <div class="summary-card"><div class="number">{{ data.summary.only_in_file2 }}</div><div class="label">仅在文件2</div></div>
+  <div class="summary-card"><div class="number">{{ data.summary.rows_with_differences }}</div><div class="label">差异行数</div></div>
+</div>
+{% endif %}
+
+{% if data.duplicate_warning %}
+<p style="color: #c67d08; font-weight: bold;">⚠ {{ data.duplicate_warning }}</p>
+{% endif %}
+
+{% if data.differences %}
+<h2>差异行详情 (共 {{ data.differences | length }} 行)</h2>
+<table>
+  <tr>
+    {% for k in data.key_columns %}<th>{{ k }} (Key)</th>{% endfor %}
+    <th>差异列</th>
+    <th>文件1 的值</th>
+    <th>文件2 的值</th>
+  </tr>
+  {% for row in data.differences %}
+  {% for diff in row.diffs %}
+  <tr>
+    {% for k in data.key_columns %}<td>{{ row.key.get(k, '') }}</td>{% endfor %}
+    <td><strong>{{ diff.column }}</strong></td>
+    <td><span class="cell-old">{{ diff.file1_value }}</span></td>
+    <td><span class="cell-new">{{ diff.file2_value }}</span></td>
+  </tr>
+  {% endfor %}
+  {% endfor %}
+</table>
+{% endif %}
+
+{% if data.only_in_file1 %}
+<h2>仅在文件1中的行 ({{ data.only_in_file1 | length }} 行)</h2>
+<table>
+  <tr>
+    {% for k in data.key_columns %}<th>{{ k }}</th>{% endfor %}
+    {% for c in data.compare_columns %}<th>{{ c }}</th>{% endfor %}
+  </tr>
+  {% for row in data.only_in_file1[:100] %}
+  <tr class="only-file1">
+    {% for k in data.key_columns %}<td>{{ row.get(k, '') }}</td>{% endfor %}
+    {% for c in data.compare_columns %}<td>{{ row.get(c, '') }}</td>{% endfor %}
+  </tr>
+  {% endfor %}
+</table>
+{% if data.only_in_file1 | length > 100 %}
+<p style="color: #888;">... 仅显示前100行</p>
+{% endif %}
+{% endif %}
+
+{% if data.only_in_file2 %}
+<h2>仅在文件2中的行 ({{ data.only_in_file2 | length }} 行)</h2>
+<table>
+  <tr>
+    {% for k in data.key_columns %}<th>{{ k }}</th>{% endfor %}
+    {% for c in data.compare_columns %}<th>{{ c }}</th>{% endfor %}
+  </tr>
+  {% for row in data.only_in_file2[:100] %}
+  <tr class="only-file2">
+    {% for k in data.key_columns %}<td>{{ row.get(k, '') }}</td>{% endfor %}
+    {% for c in data.compare_columns %}<td>{{ row.get(c, '') }}</td>{% endfor %}
+  </tr>
+  {% endfor %}
+</table>
+{% if data.only_in_file2 | length > 100 %}
+<p style="color: #888;">... 仅显示前100行</p>
+{% endif %}
+{% endif %}
+
+{% endif %}
+
+<div class="footer">文件对比工具 &mdash; 报告自动生成</div>
+</body>
+</html>
