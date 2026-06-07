@@ -34,13 +34,24 @@ export function useExcelCompare() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // Must be defined BEFORE consistent useMemo (temporal dead zone)
+  const getSheet1 = useCallback((): SheetInfo | undefined => {
+    if (!info) return undefined;
+    return info.file1.sheets.find((s) => s.name === sheet1Name);
+  }, [info, sheet1Name]);
+
+  const getSheet2 = useCallback((): SheetInfo | undefined => {
+    if (!info) return undefined;
+    return info.file2.sheets.find((s) => s.name === sheet2Name);
+  }, [info, sheet2Name]);
+
   // Derived: are column names consistent between the selected sheets?
   const consistent = useMemo(() => {
     const s1 = getSheet1();
     const s2 = getSheet2();
     if (!s1 || !s2) return true;
     return columnsAreConsistent(s1.columns, s2.columns);
-  }, [info, sheet1Name, sheet2Name]);
+  }, [getSheet1, getSheet2]);
 
   const fetchSheetInfo = useCallback(async () => {
     if (!file1 || !file2) { setError('请上传两个Excel文件'); return; }
@@ -118,16 +129,6 @@ export function useExcelCompare() {
     setKeyMapping([]); setColumnAggMapping([]);
     setResult(null); setError(null);
   }, []);
-
-  const getSheet1 = useCallback((): SheetInfo | undefined => {
-    if (!info) return undefined;
-    return info.file1.sheets.find((s) => s.name === sheet1Name);
-  }, [info, sheet1Name]);
-
-  const getSheet2 = useCallback((): SheetInfo | undefined => {
-    if (!info) return undefined;
-    return info.file2.sheets.find((s) => s.name === sheet2Name);
-  }, [info, sheet2Name]);
 
   const keyColumns1 = useMemo(() => keyMapping.map((m) => m.col1), [keyMapping]);
   const keyColumns2 = useMemo(() => keyMapping.map((m) => m.col2), [keyMapping]);
